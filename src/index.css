@@ -1,0 +1,437 @@
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CozyTracker Design System — Dark cozy pixel aesthetic */
+
+@layer base {
+  :root {
+    /* Cozy pixel palette (dark by default) */
+    --background: 232 23% 15%;          /* #1e1e2e */
+    --foreground: 226 64% 88%;          /* #cdd6f4 */
+
+    --card: 232 19% 20%;                /* #2a2a3c */
+    --card-foreground: 226 64% 88%;
+
+    --popover: 232 19% 20%;
+    --popover-foreground: 226 64% 88%;
+
+    --primary: 217 92% 76%;             /* #89b4fa soft blue */
+    --primary-foreground: 232 23% 15%;
+    --primary-glow: 217 92% 76%;
+
+    --secondary: 316 72% 86%;           /* #f5c2e7 soft pink */
+    --secondary-foreground: 232 23% 15%;
+
+    --muted: 232 16% 26%;
+    --muted-foreground: 229 10% 47%;    /* #6c7086 */
+
+    --accent: 316 72% 86%;
+    --accent-foreground: 232 23% 15%;
+
+    --destructive: 343 81% 75%;
+    --destructive-foreground: 232 23% 15%;
+
+    --border: 232 16% 30%;
+    --input: 232 16% 26%;
+    --ring: 217 92% 76%;
+
+    --radius: 0.375rem;
+
+    /* Pixel-flavored extras */
+    --surface: 232 21% 17%;             /* between bg and card */
+    --surface-elevated: 232 19% 23%;
+    --pixel-border: 232 18% 34%;
+
+    /* Soft glows */
+    --glow-primary: 0 0 0 2px hsl(217 92% 76% / 0.35), 0 0 24px -2px hsl(217 92% 76% / 0.45);
+    --glow-secondary: 0 0 0 2px hsl(316 72% 86% / 0.35), 0 0 24px -2px hsl(316 72% 86% / 0.45);
+    --shadow-pixel: 0 4px 0 0 hsl(232 23% 8% / 0.6), 0 0 0 2px hsl(232 18% 34%);
+    --shadow-card: 0 6px 24px -8px hsl(232 23% 5% / 0.6);
+
+    /* Sidebar */
+    --sidebar-background: 232 23% 13%;
+    --sidebar-foreground: 226 40% 80%;
+    --sidebar-primary: 217 92% 76%;
+    --sidebar-primary-foreground: 232 23% 15%;
+    --sidebar-accent: 232 19% 22%;
+    --sidebar-accent-foreground: 217 92% 76%;
+    --sidebar-border: 232 16% 22%;
+    --sidebar-ring: 217 92% 76%;
+
+    --transition-cozy: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --bg: var(--background);
+    --card-bg: var(--card);
+    --accent: var(--primary);
+    --text: var(--foreground);
+  }
+
+  .dark {
+    /* Same cozy theme — app is dark-first */
+    --background: 232 23% 15%;
+    --foreground: 226 64% 88%;
+    --card: 232 19% 20%;
+    --card-foreground: 226 64% 88%;
+    --popover: 232 19% 20%;
+    --popover-foreground: 226 64% 88%;
+    --primary: 217 92% 76%;
+    --primary-foreground: 232 23% 15%;
+    --secondary: 316 72% 86%;
+    --secondary-foreground: 232 23% 15%;
+    --muted: 232 16% 26%;
+    --muted-foreground: 229 10% 47%;
+    --accent: 316 72% 86%;
+    --accent-foreground: 232 23% 15%;
+    --destructive: 343 81% 75%;
+    --destructive-foreground: 232 23% 15%;
+    --border: 232 16% 30%;
+    --input: 232 16% 26%;
+    --ring: 217 92% 76%;
+    --sidebar-background: 232 23% 13%;
+    --sidebar-foreground: 226 40% 80%;
+    --sidebar-primary: 217 92% 76%;
+    --sidebar-primary-foreground: 232 23% 15%;
+    --sidebar-accent: 232 19% 22%;
+    --sidebar-accent-foreground: 217 92% 76%;
+    --sidebar-border: 232 16% 22%;
+    --sidebar-ring: 217 92% 76%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    /* Subtle pixel grain + star dots */
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, hsl(217 92% 76% / 0.08) 50%, transparent 51%),
+      radial-gradient(1px 1px at 70% 60%, hsl(316 72% 86% / 0.08) 50%, transparent 51%),
+      radial-gradient(1px 1px at 40% 80%, hsl(217 92% 76% / 0.06) 50%, transparent 51%),
+      radial-gradient(1px 1px at 85% 15%, hsl(226 64% 88% / 0.05) 50%, transparent 51%);
+    background-size: 280px 280px, 320px 320px, 240px 240px, 360px 360px;
+  }
+
+  .theme-cozy, body[data-cozy-theme="cozy"] {
+    --background: 232 23% 15%;
+    --foreground: 226 64% 88%;
+    --card: 232 19% 20%;
+    --surface: 232 21% 17%;
+    --surface-elevated: 232 19% 23%;
+    --primary: 217 92% 76%;
+    --primary-glow: 217 92% 76%;
+    --secondary: 316 72% 86%;
+    --pixel-border: 232 18% 34%;
+    --sidebar-background: 232 23% 13%;
+    --sidebar-foreground: 226 40% 80%;
+    --sidebar-accent: 232 19% 22%;
+    --sidebar-border: 232 16% 22%;
+    --bg: var(--background);
+    --card-bg: var(--card);
+    --accent: var(--primary);
+    --text: var(--foreground);
+  }
+
+  .theme-twilight, body[data-cozy-theme="twilight"] {
+    --background: 238 25% 13%;
+    --foreground: 220 72% 90%;
+    --card: 238 20% 19%;
+    --surface: 238 22% 16%;
+    --surface-elevated: 238 20% 22%;
+    --primary: 190 76% 75%;
+    --primary-glow: 190 76% 75%;
+    --secondary: 316 72% 86%;
+    --pixel-border: 238 18% 33%;
+    --sidebar-background: 238 28% 11%;
+    --sidebar-foreground: 220 52% 84%;
+    --sidebar-accent: 238 20% 21%;
+    --sidebar-border: 238 18% 26%;
+    --bg: var(--background);
+    --card-bg: var(--card);
+    --accent: var(--primary);
+    --text: var(--foreground);
+  }
+
+  .theme-forest, body[data-cozy-theme="forest"] {
+    --background: 170 22% 12%;
+    --foreground: 135 28% 88%;
+    --card: 168 18% 18%;
+    --surface: 170 20% 15%;
+    --surface-elevated: 168 18% 21%;
+    --primary: 145 54% 72%;
+    --primary-glow: 145 54% 72%;
+    --secondary: 42 86% 78%;
+    --pixel-border: 166 16% 31%;
+    --sidebar-background: 170 24% 10%;
+    --sidebar-foreground: 135 24% 82%;
+    --sidebar-accent: 168 18% 20%;
+    --sidebar-border: 166 16% 25%;
+    --bg: var(--background);
+    --card-bg: var(--card);
+    --accent: var(--primary);
+    --text: var(--foreground);
+  }
+
+  /* Reserve scrollbar space so opening modals doesn't shift the layout */
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  body.cozy-ambient {
+    animation: ambient-drift 16s steps(10, end) infinite, ambient-shift 10s ease-in-out infinite;
+  }
+
+  h1, h2, h3, h4, .font-pixel {
+    font-family: 'Pixelify Sans', system-ui, sans-serif;
+    letter-spacing: 0.01em;
+  }
+}
+
+@layer components {
+  /* Pixel border — crisp, blocky, no blur */
+  .pixel-border {
+    @apply border-2 border-[hsl(var(--pixel-border))];
+    box-shadow:
+      inset 0 0 0 1px hsl(232 23% 12%),
+      0 2px 0 0 hsl(232 23% 8% / 0.5);
+  }
+
+  .pixel-card {
+    @apply bg-card pixel-border rounded-md;
+    transition: var(--transition-cozy);
+  }
+
+  .pixel-card-hover {
+    @apply pixel-card;
+  }
+  .pixel-card-hover:hover {
+    @apply -translate-y-0.5;
+    border-color: hsl(var(--primary) / 0.6);
+    box-shadow:
+      inset 0 0 0 1px hsl(232 23% 12%),
+      0 4px 0 0 hsl(232 23% 8% / 0.5),
+      0 0 24px -4px hsl(var(--primary) / 0.4);
+  }
+
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+  .glow-secondary {
+    box-shadow: var(--glow-secondary);
+  }
+
+  .press-down {
+    transition: transform 0.08s ease-out, box-shadow 0.15s ease-out;
+  }
+  .press-down:active {
+    transform: translateY(2px);
+  }
+
+  /* Pixel selection indicator (left bar) */
+  .pixel-active-indicator {
+    position: relative;
+  }
+  .pixel-active-indicator::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    background: hsl(var(--primary));
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.7);
+  }
+
+  /* Pixel star background overlay */
+  .pixel-stars {
+    background-image:
+      radial-gradient(1.5px 1.5px at 10% 20%, hsl(var(--primary) / 0.4) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 80% 40%, hsl(var(--secondary) / 0.35) 50%, transparent 51%),
+      radial-gradient(1px 1px at 30% 70%, hsl(var(--foreground) / 0.2) 50%, transparent 51%),
+      radial-gradient(1px 1px at 60% 90%, hsl(var(--primary) / 0.3) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 90% 10%, hsl(var(--secondary) / 0.3) 50%, transparent 51%);
+    background-size: 200px 200px, 240px 240px, 180px 180px, 220px 220px, 260px 260px;
+  }
+
+  /* Hide scrollbar for horizontal carousels */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .pixel-tooltip {
+    @apply z-[10000] rounded-sm border-2 border-pixel-border bg-card px-2 py-1 font-pixel text-[10px] text-foreground shadow-[0_0_14px_-6px_hsl(var(--primary)/0.7)];
+  }
+
+  .theme-transition, .theme-transition * {
+    transition: background-color 0.28s ease, border-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease;
+  }
+
+  .compact-mode main > div {
+    @apply p-5 space-y-4;
+  }
+
+  .compact-mode .pixel-card,
+  .compact-mode .pixel-card-hover {
+    font-size: 0.92rem;
+  }
+
+  .compact-mode .pixel-card-hover [class*="h-72"] {
+    height: 13rem;
+  }
+
+  /* Star rating soft pulse on click */
+  @keyframes star-pulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.25); filter: drop-shadow(0 0 10px hsl(var(--secondary) / 0.85)); }
+    100% { transform: scale(1); }
+  }
+  .star-pulse { animation: star-pulse 0.4s ease-out; }
+
+  /* Saving indicator gentle fade */
+  @keyframes save-fade {
+    0% { opacity: 0; transform: translateY(2px); }
+    20%, 80% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-2px); }
+  }
+  .saving-indicator { animation: save-fade 1.2s ease-in-out; }
+}
+
+@keyframes ambient-drift {
+  0%, 100% { background-position: 0 0, 0 0, 0 0, 0 0; }
+  50% { background-position: 24px 18px, -18px 24px, 16px -20px, -20px -12px; }
+}
+
+@keyframes ambient-shift {
+  0%, 100% { filter: drop-shadow(0 0 0 hsl(var(--primary) / 0)); }
+  50% { filter: drop-shadow(0 0 18px hsl(var(--primary) / 0.18)); }
+}
+
+.cozy-ambient body::before,
+body.cozy-ambient::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(2px 2px at 12% 18%, hsl(var(--primary) / 0.55) 50%, transparent 52%),
+    radial-gradient(1px 1px at 28% 72%, hsl(var(--secondary) / 0.45) 50%, transparent 52%),
+    radial-gradient(2px 2px at 66% 28%, hsl(var(--foreground) / 0.22) 50%, transparent 52%),
+    radial-gradient(1px 1px at 86% 78%, hsl(var(--primary) / 0.45) 50%, transparent 52%),
+    linear-gradient(135deg, hsl(var(--primary) / 0.08), transparent 34%, hsl(var(--secondary) / 0.08));
+  background-size: 220px 220px, 280px 280px, 260px 260px, 320px 320px, 100% 100%;
+  animation: ambient-stars 12s steps(8, end) infinite, ambient-glow 5s ease-in-out infinite;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.app-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.cozy-ambient .app-shell::before,
+.app-shell.cozy-ambient::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 20%, hsl(var(--primary) / 0.16), transparent 22%),
+    radial-gradient(circle at 84% 16%, hsl(var(--secondary) / 0.12), transparent 24%),
+    radial-gradient(circle at 62% 82%, hsl(var(--primary) / 0.11), transparent 26%);
+  animation: ambient-glow 5s ease-in-out infinite;
+}
+
+@keyframes ambient-stars {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.55; }
+  50% { transform: translate3d(14px, -10px, 0); opacity: 0.95; }
+}
+
+@keyframes ambient-glow {
+  0%, 100% { box-shadow: inset 0 0 70px hsl(var(--primary) / 0.04); }
+  50% { box-shadow: inset 0 0 130px hsl(var(--primary) / 0.14); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.cozy-ambient {
+    animation: none;
+  }
+  .cozy-ambient body::before,
+  body.cozy-ambient::before {
+    animation: none;
+  }
+}
+
+/* ===== Cozy Pixel Scrollbar ===== */
+@layer base {
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.55) hsl(232 25% 11%);
+  }
+
+  /* WebKit (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: hsl(232 25% 11%);
+    border-left: 1px solid hsl(232 18% 18%);
+    border-right: 1px solid hsl(232 18% 18%);
+    background-image:
+      radial-gradient(1px 1px at 50% 20%, hsl(var(--primary) / 0.06) 50%, transparent 51%),
+      radial-gradient(1px 1px at 50% 70%, hsl(var(--secondary) / 0.05) 50%, transparent 51%);
+    background-size: 8px 40px, 8px 60px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--primary) / 0.6);
+    border-radius: 3px;
+    border: 1px solid hsl(232 23% 10%);
+    box-shadow:
+      inset 0 0 0 1px hsl(var(--primary) / 0.35),
+      inset 0 1px 0 0 hsl(var(--primary) / 0.5),
+      0 0 6px -1px hsl(var(--primary) / 0.35);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--primary) / 0.85);
+    box-shadow:
+      inset 0 0 0 1px hsl(var(--primary) / 0.55),
+      inset 0 1px 0 0 hsl(var(--primary) / 0.7),
+      0 0 12px -1px hsl(var(--primary) / 0.55);
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background-color: hsl(217 80% 62%);
+    box-shadow:
+      inset 0 0 0 1px hsl(232 23% 10%),
+      inset 0 1px 0 0 hsl(var(--primary) / 0.4),
+      0 0 4px -1px hsl(var(--primary) / 0.3);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background-color: hsl(232 25% 11%);
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+}
