@@ -5,12 +5,15 @@ import { DashboardView } from "@/components/cozy/DashboardView";
 import { LibraryView } from "@/components/cozy/LibraryView";
 import { CollectionsView } from "@/components/cozy/CollectionsView";
 import { CollectionDetailView } from "@/components/cozy/CollectionDetailView";
+import { FavoritesView } from "@/components/cozy/FavoritesView";
+import { ActivityView } from "@/components/cozy/ActivityView";
 import { StatsView } from "@/components/cozy/SimpleViews";
 import { TrashView } from "@/components/cozy/TrashView";
 import { AddMediaModal } from "@/components/cozy/AddMediaModal";
 import { AddToCollectionModal } from "@/components/cozy/AddToCollectionModal";
 import { MediaDetailModal } from "@/components/cozy/MediaDetailModal";
 import { SettingsModal } from "@/components/cozy/SettingsModal";
+import { ProfileModal } from "@/components/cozy/ProfileModal";
 import { BulkActionBar } from "@/components/cozy/BulkActionBar";
 import { CozyProvider, useCozy, MediaItem } from "@/store/cozyStore";
 import { SelectionProvider, useSelection } from "@/store/selectionStore";
@@ -35,6 +38,8 @@ const ViewSwitcher = ({
         {state.view === "collection-detail" && (
           <CollectionDetailView onAddToCollection={onAddToCollection} onView={onView} />
         )}
+        {state.view === "favorites" && <FavoritesView onView={onView} />}
+        {state.view === "activity" && <ActivityView />}
         {state.view === "stats" && <StatsView />}
         {state.view === "trash" && <TrashView onView={onView} />}
       </div>
@@ -46,6 +51,7 @@ const AppShell = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [addDefaultCollection, setAddDefaultCollection] = useState<string | undefined>(undefined);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [detail, setDetail] = useState<MediaItem | null>(null);
   const [chooserCollection, setChooserCollection] = useState<string | null>(null);
   const { state } = useCozy();
@@ -95,6 +101,7 @@ const AppShell = () => {
       if (e.key === "Escape") {
         closeAdd();
         setIsSettingsOpen(false);
+        setIsProfileOpen(false);
         setDetail(null);
         setChooserCollection(null);
         if (selectionCount > 0) clearSelection();
@@ -105,10 +112,10 @@ const AppShell = () => {
   }, [selectionCount, clearSelection]);
 
   return (
-    <div className={cn("flex h-screen w-full overflow-hidden bg-background text-foreground app-shell theme-transition", state.ui.compactMode && "compact-mode")}>
+    <div className={cn("h-screen w-full flex overflow-hidden bg-background text-foreground app-shell theme-transition", state.ui.compactMode && "compact-mode")}>
       <CozySidebar onSettings={() => setIsSettingsOpen(true)} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <TopBar onAdd={() => openAdd()} onProfile={() => setIsSettingsOpen(true)} />
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+        <TopBar onAdd={() => openAdd()} onProfile={() => setIsProfileOpen(true)} />
         <ViewSwitcher
           onAdd={() => openAdd()}
           onAddToCollection={(c) => openChooser(c)}
@@ -123,6 +130,7 @@ const AppShell = () => {
         onCreateNew={() => chooserCollection && openAdd(chooserCollection)}
       />
       <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <ProfileModal open={isProfileOpen} onOpenChange={setIsProfileOpen} />
       <MediaDetailModal item={detail} onClose={() => setDetail(null)} />
       <BulkActionBar />
     </div>

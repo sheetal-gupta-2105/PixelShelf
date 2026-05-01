@@ -13,6 +13,12 @@ export interface UIState {
   tags: string[];
 }
 
+export interface UserProfile {
+  name: string;
+  avatar: string;
+  level: string;
+}
+
 export interface MediaItem {
   id: string;
   title: string;
@@ -30,6 +36,7 @@ export interface MediaItem {
   favoriteCharacter?: string;
   createdAt: number;
   updatedAt: number;
+  isFavorite?: boolean;
   isDeleted?: boolean;
   deletedAt?: number;
 }
@@ -61,17 +68,26 @@ export interface NotificationItem {
   read: boolean;
 }
 
-export type ViewKey = "dashboard" | "library" | "collections" | "collection-detail" | "stats" | "trash";
+export interface ActivityItem {
+  id: string;
+  type: string;
+  message: string;
+  timestamp: number;
+}
+
+export type ViewKey = "dashboard" | "library" | "collections" | "collection-detail" | "favorites" | "activity" | "stats" | "trash";
 
 interface State {
   media: MediaItem[];
   collections: string[];
   collectionMeta: Record<string, CollectionMeta>;
+  user: UserProfile;
   ui: UIState;
   view: ViewKey;
   search: string;
   filters: { type: string; status: string; collection: string; tag: string };
   notifications: NotificationItem[];
+  activity: ActivityItem[];
   selectedCollection: string | null;
   collectionOrder: Record<string, string[]>; // collectionName -> ordered media ids
 }
@@ -80,13 +96,17 @@ type Action =
   | { type: "ADD_MEDIA"; payload: MediaItem }
   | { type: "UPDATE_MEDIA"; payload: MediaItem }
   | { type: "DELETE_MEDIA"; payload: string }
+  | { type: "TOGGLE_FAVORITE"; payload: string }
   | { type: "SET_VIEW"; payload: ViewKey }
   | { type: "SET_SEARCH"; payload: string }
   | { type: "SET_FILTER"; payload: Partial<State["filters"]> }
   | { type: "SET_UI"; payload: Partial<UIState> }
+  | { type: "SET_USER"; payload: Partial<UserProfile> }
   | { type: "ADD_TAG"; payload: string }
   | { type: "DELETE_TAG"; payload: string }
   | { type: "IMPORT_DATA"; payload: Partial<State> }
+  | { type: "ADD_ACTIVITY"; payload: ActivityItem }
+  | { type: "CLEAR_ACTIVITY" }
   | { type: "MARK_NOTIFICATIONS_READ" }
   | { type: "RESET_DATA" }
   | { type: "OPEN_COLLECTION"; payload: string | null }
@@ -156,6 +176,11 @@ const initialState: State = {
     "Cozy Reads": { description: "Tea-time companions", icon: "📖" },
     "Indie Quests": { description: "Small games, big hearts", icon: "🎮" },
   },
+  user: {
+    name: "Pixel Wanderer",
+    avatar: "",
+    level: "Lvl 12 · Curator",
+  },
   ui: {
     theme: "cozy",
     isAmbientOn: false,
@@ -171,9 +196,22 @@ const initialState: State = {
     { id: "n2", title: "Reminder", message: "You haven't logged anything today ☕", time: "1h", read: false },
     { id: "n3", title: "Streak", message: "12 cozy days in a row — keep going!", time: "5h", read: true },
   ],
+  activity: [],
   selectedCollection: null,
   collectionOrder: {},
 };
+
+const makeActivity = (message: string, type = "system"): ActivityItem => ({
+  id: `a-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  type,
+  message,
+  timestamp: Date.now(),
+});
+
+const addActivityEntry = (state: State, message: string, type = "system"): State => ({
+  ...state,
+  activity: [makeActivity(message, type), ...state.activity].slice(0, 50),
+});
 
 function normalizeState(raw: Partial<State> & Record<string, unknown>): State {
   const legacyPreferences = raw.preferences as (Partial<Omit<UIState, "theme">> & { theme?: string }) | undefined;
@@ -182,9 +220,14 @@ function normalizeState(raw: Partial<State> & Record<string, unknown>): State {
     ...initialState,
     ...raw,
     filters: { ...initialState.filters, ...(raw.filters ?? {}) },
+    activity: Array.isArray(raw.activity) ? (raw.activity as ActivityItem[]).slice(0, 50) : initialState.activity,
     selectedCollection: raw.selectedCollection ?? null,
     collectionOrder: (raw.collectionOrder && typeof raw.collectionOrder === "object") ? raw.collectionOrder as Record<string, string[]> : {},
     collectionMeta: { ...initialState.collectionMeta, ...((raw.collectionMeta as Record<string, CollectionMeta>) ?? {}) },
+    user: {
+      ...initialState.user,
+      ...((raw.user && typeof raw.user === "object") ? raw.user as Partial<UserProfile> : {}),
+    },
     ui: {
       ...initialState.ui,
       ...(raw.ui ?? {}),
@@ -199,11 +242,36 @@ function normalizeState(raw: Partial<State> & Record<string, unknown>): State {
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "ADD_MEDIA":
-      return { ...state, media: [action.payload, ...state.media] };
-    case "UPDATE_MEDIA":
-      return { ...state, media: state.media.map((m) => (m.id === action.payload.id ? action.payload : m)) };
-    case "DELETE_MEDIA":
-      return { ...state, media: state.media.filter((m) => m.id !== action.payload) };
+      return addActivityEntry(
+        { ...state, media: [{ ...action.payload, isFavorite: action.payload.isFavorite ?? false }, ...state.media] },
+        `Added ${action.payload.title}`,
+        "media"
+      );
+    case "UPDATE_MEDIA": {
+      const previous = state.media.find((m) => m.id === action.payload.id);
+      const nextState = { ...state, media: state.media.map((m) => (m.id === action.payload.id ? action.payload : m)) };
+      if (previous && previous.status !== action.payload.status) {
+        return addActivityEntry(nextState, `Updated ${action.payload.title} to ${action.payload.status}`, "status");
+      }
+      return nextState;
+    }
+    case "DELETE_MEDIA": {
+      const item = state.media.find((m) => m.id === action.payload);
+      const nextState = { ...state, media: state.media.filter((m) => m.id !== action.payload) };
+      return item ? addActivityEntry(nextState, `Deleted ${item.title}`, "delete") : nextState;
+    }
+    case "TOGGLE_FAVORITE": {
+      const item = state.media.find((m) => m.id === action.payload);
+      if (!item) return state;
+      const isFavorite = !item.isFavorite;
+      const nextState = {
+        ...state,
+        media: state.media.map((m) =>
+          m.id === action.payload ? { ...m, isFavorite, updatedAt: Date.now() } : m
+        ),
+      };
+      return addActivityEntry(nextState, `${isFavorite ? "Favorited" : "Unfavorited"} ${item.title}`, "favorite");
+    }
     case "SET_VIEW":
       return { ...state, view: action.payload };
     case "SET_SEARCH":
@@ -212,6 +280,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, filters: { ...state.filters, ...action.payload } };
     case "SET_UI":
       return { ...state, ui: { ...state.ui, ...action.payload } };
+    case "SET_USER":
+      return { ...state, user: { ...state.user, ...action.payload } };
     case "ADD_TAG": {
       const tag = action.payload.trim();
       if (!tag || state.ui.tags.some((t) => t.toLowerCase() === tag.toLowerCase())) return state;
@@ -226,6 +296,10 @@ function reducer(state: State, action: Action): State {
       };
     case "IMPORT_DATA":
       return normalizeState({ ...state, ...action.payload, view: state.view });
+    case "ADD_ACTIVITY":
+      return { ...state, activity: [action.payload, ...state.activity].slice(0, 50) };
+    case "CLEAR_ACTIVITY":
+      return { ...state, activity: [] };
     case "MARK_NOTIFICATIONS_READ":
       return { ...state, notifications: state.notifications.map((n) => ({ ...n, read: true })) };
     case "RESET_DATA":
@@ -327,12 +401,18 @@ function reducer(state: State, action: Action): State {
       const ids = new Set(action.payload);
       if (ids.size === 0) return state;
       const now = Date.now();
-      return {
+      let nextState = {
         ...state,
         media: state.media.map((m) =>
           ids.has(m.id) && !m.isDeleted ? { ...m, isDeleted: true, deletedAt: now } : m
         ),
       };
+      state.media
+        .filter((m) => ids.has(m.id) && !m.isDeleted)
+        .forEach((m) => {
+          nextState = addActivityEntry(nextState, `Deleted ${m.title}`, "delete");
+        });
+      return nextState;
     }
     case "RESTORE_MEDIA": {
       const ids = new Set(action.payload);
@@ -389,6 +469,10 @@ interface CozyContextValue {
   setAmbient: (on: boolean) => void;
   setPreferences: (p: Partial<Omit<UIState, "tags" | "isAmbientOn">>) => void;
   setUI: (p: Partial<UIState>) => void;
+  setUser: (p: Partial<UserProfile>) => void;
+  toggleFavorite: (id: string) => void;
+  addActivity: (message: string, type?: string) => void;
+  clearActivity: () => void;
   addTag: (tag: string) => void;
   deleteTag: (tag: string) => void;
   exportData: () => string;
@@ -437,7 +521,9 @@ export function CozyProvider({ children }: { children: ReactNode }) {
           media: state.media,
           collections: state.collections,
           collectionMeta: state.collectionMeta,
+          user: state.user,
           notifications: state.notifications,
+          activity: state.activity,
           ui: state.ui,
           collectionOrder: state.collectionOrder,
         })
@@ -445,7 +531,7 @@ export function CozyProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
-  }, [state.media, state.collections, state.collectionMeta, state.ui, state.notifications, state.collectionOrder]);
+  }, [state.media, state.collections, state.collectionMeta, state.user, state.ui, state.notifications, state.activity, state.collectionOrder]);
 
   const value = useMemo<CozyContextValue>(
     () => ({
@@ -457,6 +543,7 @@ export function CozyProvider({ children }: { children: ReactNode }) {
             id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
             createdAt: Date.now(),
             updatedAt: Date.now(),
+            isFavorite: false,
             cover: m.cover ?? pickCover(m.title),
             ...m,
           },
@@ -469,9 +556,13 @@ export function CozyProvider({ children }: { children: ReactNode }) {
       setAmbient: (on) => dispatch({ type: "SET_UI", payload: { isAmbientOn: on } }),
       setPreferences: (p) => dispatch({ type: "SET_UI", payload: p }),
       setUI: (p) => dispatch({ type: "SET_UI", payload: p }),
+      setUser: (p) => dispatch({ type: "SET_USER", payload: p }),
+      toggleFavorite: (id) => dispatch({ type: "TOGGLE_FAVORITE", payload: id }),
+      addActivity: (message, type = "system") => dispatch({ type: "ADD_ACTIVITY", payload: makeActivity(message, type) }),
+      clearActivity: () => dispatch({ type: "CLEAR_ACTIVITY" }),
       addTag: (tag) => dispatch({ type: "ADD_TAG", payload: tag }),
       deleteTag: (tag) => dispatch({ type: "DELETE_TAG", payload: tag }),
-      exportData: () => JSON.stringify({ media: state.media, collections: state.collections, ui: state.ui }, null, 2),
+      exportData: () => JSON.stringify({ media: state.media, collections: state.collections, user: state.user, activity: state.activity, ui: state.ui }, null, 2),
       importData: (json) => {
         try {
           const parsed = JSON.parse(json);

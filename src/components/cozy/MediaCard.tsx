@@ -1,6 +1,6 @@
-import { Check } from "lucide-react";
+import { Check, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MediaItem } from "@/store/cozyStore";
+import { MediaItem, useCozy } from "@/store/cozyStore";
 import { useSelection } from "@/store/selectionStore";
 
 interface MediaCardProps {
@@ -15,6 +15,7 @@ interface MediaCardProps {
 
 export function MediaCard({ item, size = "md", badge, episode, onClick, selectable = true }: MediaCardProps) {
   const selection = useSelection();
+  const { toggleFavorite } = useCozy();
   const isSelected = selectable && selection.isSelected(item.id);
   const selectionMode = selectable && selection.count > 0;
 
@@ -45,6 +46,12 @@ export function MediaCard({ item, size = "md", badge, episode, onClick, selectab
     e.stopPropagation();
     if (!selectable) return;
     selection.toggle(item.id);
+  };
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(item.id);
   };
 
   return (
@@ -82,6 +89,29 @@ export function MediaCard({ item, size = "md", badge, episode, onClick, selectab
         </span>
       )}
 
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label={item.isFavorite ? `Remove ${item.title} from favorites` : `Add ${item.title} to favorites`}
+        onClick={handleFavoriteClick}
+        onKeyDown={(e) => {
+          if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite(item.id);
+          }
+        }}
+        className={cn(
+          "absolute top-2 right-2 z-20 h-8 w-8 grid place-items-center rounded-sm border-2 bg-background/85 backdrop-blur-[1px] transition-all press-down",
+          item.isFavorite
+            ? "border-secondary/70 text-secondary opacity-100 shadow-[0_0_18px_-6px_hsl(var(--secondary)/0.9)]"
+            : "border-pixel-border text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-secondary hover:border-secondary/60",
+          selectionMode && "opacity-100"
+        )}
+      >
+        <Heart className={cn("h-4 w-4", item.isFavorite && "fill-current")} />
+      </span>
+
       {/* Cover */}
       <div className={cn("relative w-full overflow-hidden border-b-2 border-pixel-border", heights[size])}>
         {item.poster ? (
@@ -116,7 +146,7 @@ export function MediaCard({ item, size = "md", badge, episode, onClick, selectab
         />
 
         {badge && (
-          <span className="absolute top-2 right-2 px-2 py-0.5 text-[10px] font-pixel uppercase tracking-wider rounded-sm bg-background/80 border border-primary/50 text-primary">
+          <span className="absolute top-12 right-2 px-2 py-0.5 text-[10px] font-pixel uppercase tracking-wider rounded-sm bg-background/80 border border-primary/50 text-primary">
             {badge}
           </span>
         )}

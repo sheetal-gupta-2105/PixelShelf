@@ -108,17 +108,28 @@
 
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    /* Subtle pixel grain + star dots */
-    background-image:
-      radial-gradient(1px 1px at 20% 30%, hsl(217 92% 76% / 0.08) 50%, transparent 51%),
-      radial-gradient(1px 1px at 70% 60%, hsl(316 72% 86% / 0.08) 50%, transparent 51%),
-      radial-gradient(1px 1px at 40% 80%, hsl(217 92% 76% / 0.06) 50%, transparent 51%),
-      radial-gradient(1px 1px at 85% 15%, hsl(226 64% 88% / 0.05) 50%, transparent 51%);
-    background-size: 280px 280px, 320px 320px, 240px 240px, 360px 360px;
+    height: 100%;
+    min-height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: hsl(var(--background));
+  }
+
+  #root {
+    height: 100%;
+    min-height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   .theme-cozy, body[data-cozy-theme="cozy"] {
@@ -187,7 +198,7 @@
   }
 
   body.cozy-ambient {
-    animation: ambient-drift 16s steps(10, end) infinite, ambient-shift 10s ease-in-out infinite;
+    animation: none;
   }
 
   h1, h2, h3, h4, .font-pixel {
@@ -314,26 +325,11 @@
   50% { filter: drop-shadow(0 0 18px hsl(var(--primary) / 0.18)); }
 }
 
-.cozy-ambient body::before,
-body.cozy-ambient::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(2px 2px at 12% 18%, hsl(var(--primary) / 0.55) 50%, transparent 52%),
-    radial-gradient(1px 1px at 28% 72%, hsl(var(--secondary) / 0.45) 50%, transparent 52%),
-    radial-gradient(2px 2px at 66% 28%, hsl(var(--foreground) / 0.22) 50%, transparent 52%),
-    radial-gradient(1px 1px at 86% 78%, hsl(var(--primary) / 0.45) 50%, transparent 52%),
-    linear-gradient(135deg, hsl(var(--primary) / 0.08), transparent 34%, hsl(var(--secondary) / 0.08));
-  background-size: 220px 220px, 280px 280px, 260px 260px, 320px 320px, 100% 100%;
-  animation: ambient-stars 12s steps(8, end) infinite, ambient-glow 5s ease-in-out infinite;
-}
-
 .app-shell {
   position: relative;
   z-index: 1;
+  isolation: isolate;
+  background: hsl(var(--background));
 }
 
 .app-shell > * {
@@ -344,14 +340,20 @@ body.cozy-ambient::before {
 .cozy-ambient .app-shell::before,
 .app-shell.cozy-ambient::before {
   content: "";
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 4rem;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 0;
   pointer-events: none;
   background:
+    radial-gradient(2px 2px at 12% 18%, hsl(var(--primary) / 0.45) 50%, transparent 52%),
+    radial-gradient(1px 1px at 28% 72%, hsl(var(--secondary) / 0.35) 50%, transparent 52%),
     radial-gradient(circle at 18% 20%, hsl(var(--primary) / 0.16), transparent 22%),
     radial-gradient(circle at 84% 16%, hsl(var(--secondary) / 0.12), transparent 24%),
     radial-gradient(circle at 62% 82%, hsl(var(--primary) / 0.11), transparent 26%);
+  background-size: 220px 220px, 280px 280px, 100% 100%, 100% 100%, 100% 100%;
   animation: ambient-glow 5s ease-in-out infinite;
 }
 
@@ -369,8 +371,8 @@ body.cozy-ambient::before {
   body.cozy-ambient {
     animation: none;
   }
-  .cozy-ambient body::before,
-  body.cozy-ambient::before {
+  .cozy-ambient .app-shell::before,
+  .app-shell.cozy-ambient::before {
     animation: none;
   }
 }

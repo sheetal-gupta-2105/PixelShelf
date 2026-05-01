@@ -1,22 +1,42 @@
-import { Search, Plus, Bell, Check } from "lucide-react";
+import { Search, Plus, Bell, Check, Activity, Heart, LogOut, Moon, RefreshCw, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useCozy } from "@/store/cozyStore";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TopBarProps {
   onAdd: () => void;
   onProfile?: () => void;
 }
 
+const getInitials = (name: string) => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "PW";
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+};
+
 export function TopBar({ onAdd, onProfile }: TopBarProps) {
-  const { state, setSearch, setView, markNotificationsRead } = useCozy();
+  const { state, setSearch, setView, setUI, markNotificationsRead } = useCozy();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [panelPosition, setPanelPosition] = useState({ top: 64, right: 24 });
   const bellRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const unread = state.notifications.filter((n) => !n.read).length;
+  const toggleTheme = () => setUI({ theme: state.ui.theme === "cozy" ? "twilight" : "cozy" });
+  const initials = getInitials(state.user.name);
 
   useEffect(() => {
     if (!isNotificationsOpen) return;
@@ -93,9 +113,9 @@ export function TopBar({ onAdd, onProfile }: TopBarProps) {
     : null;
 
   return (
-    <header className="h-16 border-b-2 border-border bg-surface/60 backdrop-blur-[2px] flex items-center gap-4 px-6 shrink-0">
+    <header className="h-16 w-full border-b-2 border-border bg-surface/60 backdrop-blur-[2px] flex items-center gap-4 px-6 shrink-0">
       {/* Search */}
-      <div className="relative flex-1 max-w-xl">
+      <div className="relative flex-1 min-w-0">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <input
           id="global-search"
@@ -115,7 +135,7 @@ export function TopBar({ onAdd, onProfile }: TopBarProps) {
 
       <button
         onClick={onAdd}
-        className="h-10 px-4 rounded-sm bg-primary text-primary-foreground font-medium text-sm flex items-center gap-2 press-down hover:shadow-[0_0_24px_-4px_hsl(var(--primary)/0.7)] transition-shadow border-2 border-primary/60"
+        className="h-10 px-4 rounded-sm bg-primary text-primary-foreground font-medium text-sm flex items-center gap-2 press-down hover:shadow-[0_0_24px_-4px_hsl(var(--primary)/0.7)] transition-shadow border-2 border-primary/60 shrink-0"
       >
         <Plus className="h-4 w-4" />
         <span className="font-pixel tracking-wide">Add Media</span>
@@ -128,7 +148,7 @@ export function TopBar({ onAdd, onProfile }: TopBarProps) {
             ref={bellRef}
             onClick={() => setIsNotificationsOpen((o) => !o)}
             className={cn(
-              "relative h-10 w-10 grid place-items-center rounded-sm bg-card border-2 border-pixel-border text-muted-foreground hover:text-primary hover:border-primary/40 press-down transition-all",
+              "relative h-10 w-10 shrink-0 grid place-items-center rounded-sm bg-card border-2 border-pixel-border text-muted-foreground hover:text-primary hover:border-primary/40 press-down transition-all",
               isNotificationsOpen && "text-primary border-primary/60 shadow-[0_0_18px_-6px_hsl(var(--primary)/0.8)]"
             )}
             aria-label="Notifications"
@@ -145,25 +165,93 @@ export function TopBar({ onAdd, onProfile }: TopBarProps) {
       {notificationPanel}
 
       {/* Profile */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={onProfile}
-            className="flex items-center gap-3 pl-3 border-l-2 border-border press-down rounded-sm hover:text-primary transition-colors group"
-            aria-label="Open profile & settings"
-          >
-            <div className="text-right hidden sm:block">
-              <p className="text-xs font-pixel text-foreground leading-none group-hover:text-primary transition-colors">Pixel Wanderer</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Lvl 12 · Curator</p>
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex shrink-0 items-center gap-3 pl-3 border-l-2 border-border press-down rounded-sm hover:text-primary transition-colors group data-[state=open]:text-primary"
+                aria-label="Open profile menu"
+              >
+                <div className="text-right hidden sm:block">
+                  <p className="text-xs font-pixel text-foreground leading-none group-hover:text-primary group-data-[state=open]:text-primary transition-colors">{state.user.name}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{state.user.level}</p>
+                </div>
+                <Avatar className="h-10 w-10 rounded-sm border-2 border-primary/50 bg-gradient-to-br from-primary/30 to-secondary/30 glow-primary group-hover:border-primary/80 group-hover:shadow-[0_0_18px_-4px_hsl(var(--primary)/0.7)] group-data-[state=open]:border-primary/80 group-data-[state=open]:shadow-[0_0_18px_-4px_hsl(var(--primary)/0.7)] transition-all">
+                  {state.user.avatar && <AvatarImage src={state.user.avatar} alt={`${state.user.name} avatar`} className="object-cover" />}
+                  <AvatarFallback className="rounded-sm bg-transparent font-pixel text-sm text-foreground">{initials}</AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent className="pixel-tooltip">Profile menu</TooltipContent>
+        </Tooltip>
+        <DropdownMenuContent
+          align="end"
+          sideOffset={10}
+          className="w-60 rounded-sm border-2 border-pixel-border bg-card p-0 text-foreground shadow-[0_6px_24px_-8px_hsl(232_23%_5%/0.8)] glow-primary"
+        >
+          <DropdownMenuLabel className="px-4 py-3 border-b-2 border-pixel-border bg-surface">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-9 w-9 rounded-sm border-2 border-primary/50 bg-gradient-to-br from-primary/30 to-secondary/30">
+                {state.user.avatar && <AvatarImage src={state.user.avatar} alt={`${state.user.name} avatar`} className="object-cover" />}
+                <AvatarFallback className="rounded-sm bg-transparent font-pixel text-xs text-foreground">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="font-pixel text-sm text-foreground leading-none truncate">{state.user.name}</p>
+                <p className="mt-1 text-[10px] font-normal text-muted-foreground">{state.user.level}</p>
+              </div>
             </div>
-            <div className="h-10 w-10 rounded-sm border-2 border-primary/50 bg-gradient-to-br from-primary/30 to-secondary/30 grid place-items-center glow-primary group-hover:border-primary/80 group-hover:shadow-[0_0_18px_-4px_hsl(var(--primary)/0.7)] transition-all">
-              <span className="font-pixel text-sm text-foreground">PW</span>
-            </div>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent className="pixel-tooltip">Profile & settings</TooltipContent>
-      </Tooltip>
+          </DropdownMenuLabel>
+          <div className="p-1.5">
+            <DropdownMenuItem
+              onSelect={onProfile}
+              className="cursor-pointer gap-2 rounded-sm px-3 py-2 font-pixel text-xs text-muted-foreground focus:bg-sidebar-accent/60 focus:text-primary"
+            >
+              <User className="h-4 w-4" />
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => setView("favorites")}
+              className="cursor-pointer gap-2 rounded-sm px-3 py-2 font-pixel text-xs text-muted-foreground focus:bg-sidebar-accent/60 focus:text-primary"
+            >
+              <Heart className="h-4 w-4" />
+              Favorites
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => setView("activity")}
+              className="cursor-pointer gap-2 rounded-sm px-3 py-2 font-pixel text-xs text-muted-foreground focus:bg-sidebar-accent/60 focus:text-primary"
+            >
+              <Activity className="h-4 w-4" />
+              Activity
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-1 h-px bg-pixel-border/70" />
+            <DropdownMenuItem
+              onSelect={() => console.log("Sync triggered")}
+              className="cursor-pointer gap-2 rounded-sm px-3 py-2 font-pixel text-xs text-muted-foreground focus:bg-sidebar-accent/60 focus:text-primary"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Sync Data
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={toggleTheme}
+              className="cursor-pointer gap-2 rounded-sm px-3 py-2 font-pixel text-xs text-muted-foreground focus:bg-sidebar-accent/60 focus:text-primary"
+            >
+              <Moon className="h-4 w-4" />
+              Toggle Theme
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-1 h-px bg-pixel-border/70" />
+            <DropdownMenuItem
+              onSelect={() => console.log("Logout")}
+              className="cursor-pointer gap-2 rounded-sm px-3 py-2 font-pixel text-xs text-muted-foreground focus:bg-sidebar-accent/60 focus:text-primary"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </DropdownMenuItem>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </header>
   );
 }
